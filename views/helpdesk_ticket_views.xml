@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+
+    <record id="helpdesk_ticket_action" model="ir.actions.act_window">
+        <field name="name">Tickets</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">helpdesk.ticket</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem
+        id="helpdesk_ticket_main_menu"
+        name="Helpdesk"
+        sequence="16"
+        action="helpdesk_ticket_action"
+    />
+
+    <record id="ticket_view_tree" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.view.tree</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"></field>
+                <field name="description"></field>
+                <field name="assigned_date"></field>
+                <field name="end_date"></field>
+                <field  name="priority"></field>
+                <field name="user_id"></field>
+            </tree>
+        </field>
+    </record>
+
+    <record id="ticket_view_form" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.view.form</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button
+                        string="Assign to me"
+                        name="assign_to_me"
+                        type="object"
+                        attrs="{'invisible' : [('user_id', '!=', False)]}"
+                    />
+                </header>
+                <sheet>
+                    <group colspan="2" col="2">
+                        <field name="name"></field>
+                        <field name="description"></field>
+                    </group>
+                    <group colspan="2" col="2">
+                        <field name="priority"  widget="priority" />
+                        <field name="tag_ids" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="assigned_date"/>
+                        <field name="end_date"/>
+                        <field name="user_id"/>
+                        <field name="partner_id"/>
+                        <field name="customer_name" />
+                        <field name="customer_mail" />
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+
+            </form>
+            
+        </field>
+    </record>
+
+    <record id="ticket_view_search" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.view.search</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="description" />
+                <field name="partner_id" />
+                <filter string="Unattended" name="unattended" domain="[('user_id', '=', False)]"/>
+
+                <group expand="0" string="Group by">
+                    <filter string="Partner" name="group_partner" domain="[]" context="{'group by' : 'partner_id'}" />
+                    <filter string="User" name="group_user" domain="[]" context="{'group by' : 'user_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>
