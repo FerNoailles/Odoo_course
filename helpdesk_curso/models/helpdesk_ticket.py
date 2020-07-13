@@ -5,6 +5,9 @@
 from odoo import models, fields, _, api
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 from datetime import datetime
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class HelpdeskTicket(models.Model):
     _name = 'helpdesk.ticket'
@@ -42,7 +45,18 @@ class HelpdeskTicket(models.Model):
         store=True,
     )
 
-    end_date = fields.Date(string='End Date',required=True)
+    end_date = fields.Date(
+        string='End Date',
+        required=True
+    )
+    
+    closed = fields.Boolean(
+        related='stage_id.closed'
+    )
+    
+    unattended = fields.Boolean(
+        related='stage_id.unattended'
+    )
 
     user_id = fields.Many2one(
         string = "Assigned to",
@@ -65,12 +79,12 @@ class HelpdeskTicket(models.Model):
     )
 
     tag_ids = fields.Many2many(
-        name            = "Tags",
-        comodel_name    = "helpdesk.ticket.tag",
+        name = "Tags",
+        comodel_name = "helpdesk.ticket.tag",
     )
 
     color = fields.Integer(
-        default = 0,
+        default= 0,
         compute = '_compute_deadline',
     )
 
@@ -81,6 +95,8 @@ class HelpdeskTicket(models.Model):
         default=_get_default_stage_id,
         track_visibility='onchange',
     )
+    
+    team_id = fields.Many2one('helpdesk.ticket.team')
 
     @api.multi
     def assign_to_me (self):
@@ -120,19 +136,17 @@ class HelpdeskTicket(models.Model):
         for record in self:
             dnow = datetime.now()
             dout = datetime.strptime(record.end_date, '%Y-%m-%d')
-            if  ( ( dout - dnow ).days  < 0 ):
-                if ( int(record.stage_id) < 17 ):
-                    record.update({
-                        'color' : 1
-                    })
+            color_calculated = 10
+            _logger.info(record.stage_id.name)
+            if record.stage_id.name in ['New', 'In Progress', 'Awaiting']:
+                if (dout - dnow).days < 0 :
+                    color_calculated = 1
+                elif (dout-dnow).days < 3 :
+                    color_calculated = 3
             else:
-                if( abs( ( dout - dnow ).days )  > 3 ):
-                    if ( int(record.stage_id) < 17 ):
-                        record.update({
-                            'color' : 10
-                        })
-                else:
-                    if ( int(record.stage_id) < 17 ):
-                        record.update({
-                            'color' : 3
-                        })
+                color_calculated = 0
+            _logger.info('Color calculated : ' + str(color_calculated))
+            _logger.info("It's unattended? " + str(record.unattended) )
+            record.update({
+                'color':color_calculated
+            })

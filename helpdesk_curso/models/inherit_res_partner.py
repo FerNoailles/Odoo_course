@@ -16,8 +16,23 @@ class ResPartner(models.Model):
         string = 'Number of tickets',
         compute = '_compute_count_tickets'
     )
+    count_tickets_active = fields.Integer(
+        string = 'Number of active tickets',
+        compute = '_compute_count_tickets_active'
+    )
 
     @api.multi
     def _compute_count_tickets(self):
         for record in self:
+            
+            ticket_ids = self.env["helpdesk.ticket"].search(
+                [("partner_id", "child_of", record.id)]
+            )
+            
             record.count_tickets = len(record.helpdesk_ticket_ids)
+            
+            record.count_tickets_active = len(
+                ticket_ids.filtered(
+                    lambda ticket: not ticket.stage_id.closed
+                )
+            )
