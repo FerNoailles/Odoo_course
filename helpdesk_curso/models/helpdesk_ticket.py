@@ -63,6 +63,12 @@ class HelpdeskTicket(models.Model):
         comodel_name = "res.users",
         ondelete = "restrict",
     )
+    
+    user_ids = fields.Many2many(
+        comodel_name = "res.users",
+        string="Members",
+        related="team_id.user_ids",
+    )
 
     partner_id = fields.Many2one(
         string = "Customer",
@@ -96,7 +102,10 @@ class HelpdeskTicket(models.Model):
         track_visibility='onchange',
     )
     
-    team_id = fields.Many2one('helpdesk.ticket.team')
+    team_id = fields.Many2one(
+        'helpdesk.ticket.team',
+        string = 'Team',
+    )
 
     @api.multi
     def assign_to_me (self):
@@ -113,6 +122,36 @@ class HelpdeskTicket(models.Model):
                     'customer_name' : partner.name,
                     'customer_mail' : partner.email,
                 })
+    
+    @api.multi
+    @api.onchange('team_id', 'user_id')
+    def _onchange_dominion_user_id(self):
+        if self.user_id:
+            if self.user_id and self.user_ids and \
+                    self.user_id not in self.user_ids:
+                self.update({
+                    'user_id': False
+                })
+                return {'domain': {'user_id': []}}
+        if self.team_id:
+            return {'domain': {'user_id': [('id', 'in', self.user_ids.ids)]}}
+        else:
+            return {'domain': {'user_id': []}}
+
+    @api.model
+    @api.onchange('team_id')
+    def _onchange_user_from_team(self):
+        if self.team_id.user_ids:
+            min_tickets = None; user_min_tickets = None
+            for record in self.team_id.user_ids:
+                    number_of_tickets = self.search_count([
+                            ('team_id','=',self.team_id.id),
+                            ('user_id','=',record.id)
+                    ])
+                    if (min_tickets is None) or (number_of_tickets < min_tickets) :
+                        min_tickets = number_of_tickets
+                        user_min_tickets = record
+            self.user_id = user_min_tickets  
     
     @api.depends('user_id')
     def _compute_assigned_date(self):

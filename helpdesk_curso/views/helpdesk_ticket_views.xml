@@ -40,21 +40,26 @@
                     />
                 </header>
                 <sheet>
-                    <group colspan="2" col="2">
-                        <field name="name"></field>
-                        <field name="description"></field>
-                    </group>
-                    <group colspan="2" col="2">
-                        <field name="priority"  widget="priority" />
-                        <field name="tag_ids" widget="many2many_tags"/>
+                    <group>
+                        <field name="name"/>
                     </group>
                     <group>
-                        <field name="assigned_date"/>
-                        <field name="end_date"/>
-                        <field name="user_id"/>
-                        <field name="partner_id"/>
-                        <field name="customer_name" />
-                        <field name="customer_mail" />
+                        <group>
+                            <field name="priority"  widget="priority" />
+                            <field name="tag_ids" widget="many2many_tags"/>
+                            <field name="assigned_date"/>
+                            <field name="end_date"/>
+                        </group>
+                        <group>
+                            <field name="team_id" />
+                            <field name="user_id"/>
+                            <field name="partner_id"/>
+                            <field name="customer_name" />
+                            <field name="customer_mail" />
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description"/>
                     </group>
                 </sheet>
                 <div class="oe_chatter">
